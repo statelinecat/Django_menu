@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Django Tree Menu{% endblock %}</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --bg-color: #f8f9fa;
+            --sidebar-width: 250px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--bg-color);
+        }
+
+        .menu-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            padding: 20px;
+            background: white;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background: white;
+        }
+
+        .menu {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu-item {
+            margin: 8px 0;
+            position: relative;
+        }
+
+        .menu-link {
+            display: block;
+            padding: 8px 12px;
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .menu-link:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .menu-link.active {
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .dropdown-menu {
+            list-style: none;
+            padding-left: 15px;
+            margin-top: 5px;
+            border-left: 2px solid #eee;
+            display: none;
+        }
+
+        .menu-item.expanded > .dropdown-menu {
+            display: block;
+        }
+
+        .menu-item.has-active-child > .dropdown-menu {
+            display: block;
+        }
+
+        .menu-toggle {
+            float: right;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        @media (max-width: 768px) {
+            .menu-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <!-- Левое меню -->
+        <aside class="sidebar">
+            <h3>Основное меню</h3>
+            {% load menu_tags %}
+            {% draw_menu 'main_menu' %}
+        </aside>
+
+        <!-- Основной контент -->
+        <main class="main-content">
+            {% block content %}
+            {% endblock %}
+        </main>
+
+        <!-- Правое меню -->
+        <aside class="sidebar">
+            <h3>Дополнительно</h3>
+            {% load menu_tags %}
+            {% draw_menu 'secondary_menu' %}
+        </aside>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Подсветка активного пункта и раскрытие родительских элементов
+            const currentPath = window.location.pathname;
+            const activeLinks = document.querySelectorAll(`.menu-link[href="${currentPath}"]`);
+
+            activeLinks.forEach(link => {
+                link.classList.add('active');
+
+                // Раскрываем всех родителей активного пункта
+                let parentItem = link.closest('.menu-item');
+                while (parentItem) {
+                    parentItem.classList.add('expanded', 'has-active-child');
+                    const dropdown = parentItem.querySelector('.dropdown-menu');
+                    if (dropdown) dropdown.style.display = 'block';
+
+                    // Поднимаемся вверх по иерархии
+                    parentItem = parentItem.parentElement.closest('.menu-item');
+                }
+            });
+
+            // Обработка кликов по пунктам меню с подменю
+            document.querySelectorAll('.menu-item').forEach(item => {
+                const link = item.querySelector('.menu-link');
+                const dropdown = item.querySelector('.dropdown-menu');
+
+                if (dropdown) {
+                    // Добавляем иконку-индикатор
+                    const toggle = document.createElement('span');
+                    toggle.className = 'menu-toggle';
+                    link.appendChild(toggle);
+
+                    link.addEventListener('click', function(e) {
+                        // Если кликнули по самому пункту (не по иконке)
+                        if (e.target === link) {
+                            return; // Позволяем переходу по ссылке
+                        }
+
+                        e.preventDefault();
+                        item.classList.toggle('expanded');
+                        toggle.textContent = item.classList.contains('expanded') ? '▼' : '▶';
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

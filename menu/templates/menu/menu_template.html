@@ -1,0 +1,19 @@
+<ul class="menu">
+    {% for node in menu_tree %}
+        <li class="menu-item
+                  {% if node.is_active %}active{% endif %}
+                  {% if node.should_expand %}expanded{% endif %}">
+            <a class="menu-link {% if node.is_active %}active{% endif %}"
+               href="{{ node.url }}"
+               {% if node.children %}data-has-children="true"{% endif %}>
+                {{ node.item.title }}
+            </a>
+            {% if node.children %}
+                <ul class="dropdown-menu"
+                    {% if node.should_expand %}style="display: block;"{% endif %}>
+                    {% include 'menu/menu_template.html' with menu_tree=node.children current_path=current_path %}
+                </ul>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
